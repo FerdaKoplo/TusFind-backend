@@ -19,6 +19,10 @@ class ItemFound extends Model
         'status'
     ];
 
+    const STATUS_PENDING = 'pending';
+    const STATUS_MATCHED = 'matched';
+    const STATUS_CLAIMED = 'claimed';
+
     public function user()
     {
         return $this->belongsTo(User::class);

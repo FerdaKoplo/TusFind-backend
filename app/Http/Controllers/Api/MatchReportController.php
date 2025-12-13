@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\ItemFound;
+use App\Models\ItemLost;
 use App\Models\MatchReport;
 use Illuminate\Http\Request;
 
@@ -36,8 +38,9 @@ class MatchReportController extends Controller
 
     public function autoMatch()
     {
-        $lostItems = ItemLost::where('status', 'open')->get();
-        $foundItems = ItemFound::where('status', 'open')->get();
+        $lostItems = ItemLost::where('status', ItemLost::STATUS_PENDING)->get();
+        $foundItems = ItemFound::where('status', ItemFound::STATUS_PENDING)->get();
+
 
         $createdMatches = [];
 

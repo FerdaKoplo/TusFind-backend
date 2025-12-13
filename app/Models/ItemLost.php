@@ -19,6 +19,10 @@ class ItemLost extends Model
         'status',
     ];
 
+    const STATUS_PENDING = 'pending';
+    const STATUS_MATCHED = 'matched';
+    const STATUS_RESOLVED = 'resolved';
+
     public function user()
     {
         return $this->belongsTo(User::class);
