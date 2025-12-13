@@ -15,4 +15,14 @@ class MatchReport extends Model
         'match_score',
         'status'
     ];
+
+    public function itemLost()
+    {
+        return $this->belongsTo(ItemLost::class);
+    }
+
+    public function itemFound()
+    {
+        return $this->belongsTo(ItemFound::class);
+    }
 }
