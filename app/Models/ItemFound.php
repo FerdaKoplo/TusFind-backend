@@ -18,4 +18,29 @@ class ItemFound extends Model
         'description',
         'status'
     ];
+
+    const STATUS_PENDING = 'pending';
+    const STATUS_MATCHED = 'matched';
+    const STATUS_CLAIMED = 'claimed';
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    public function item()
+    {
+        return $this->belongsTo(Item::class);
+    }
+
+    public function images()
+    {
+        return $this->hasMany(ItemImage::class);
+    }
+
 }

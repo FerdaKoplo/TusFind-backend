@@ -15,4 +15,19 @@ class ItemImage extends Model
         'item_found_id',
         'image_path',
     ];
+
+    public function item()
+    {
+        return $this->belongsTo(Item::class);
+    }
+
+    public function itemLost()
+    {
+        return $this->belongsTo(ItemLost::class);
+    }
+
+    public function itemFound()
+    {
+        return $this->belongsTo(ItemFound::class);
+    }
 }

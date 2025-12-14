@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\ActivityController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -12,6 +14,11 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
+
+Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::resource('categories', CategoryController::class);
+    Route::get('/activities', [ActivityController::class, 'index'])->name('activities.index');
+});
 
 Route::get('/', function () {
     return view('welcome');
