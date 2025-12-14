@@ -41,7 +41,6 @@ class MatchReportController extends Controller
         $lostItems = ItemLost::where('status', ItemLost::STATUS_PENDING)->get();
         $foundItems = ItemFound::where('status', ItemFound::STATUS_PENDING)->get();
 
-
         $createdMatches = [];
 
         foreach ($lostItems as $lost) {
