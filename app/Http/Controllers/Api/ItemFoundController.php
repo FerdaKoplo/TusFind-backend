@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Item;
 use App\Models\ItemFound;
 use Illuminate\Http\Request;
 
@@ -24,16 +25,27 @@ class ItemFoundController extends Controller
     {
         $validated = $request->validate([
             'category_id' => 'required|exists:categories,id',
-            'item_id' => 'required|exists:items,id',
+            'item_id' => 'nullable|exists:items,id',
+            'custom_item_name' => 'nullable|string|max:255',
             'found_date' => 'nullable|date',
             'found_location' => 'nullable|string',
             'description' => 'nullable|string',
         ]);
 
+        if (!$request->item_id && !$request->custom_item_name) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Item is required'
+            ], 422);
+        }
+
+        $itemId = $this->resolveItemId($request);
+
+
         $foundItem = ItemFound::create([
             'user_id' => $request->user()->id,
             'category_id' => $validated['category_id'],
-            'item_id' => $validated['item_id'],
+            'item_id' => $itemId,
             'found_date' => $validated['found_date'] ?? null,
             'found_location' => $validated['found_location'] ?? null,
             'description' => $validated['description'] ?? null,
@@ -43,7 +55,7 @@ class ItemFoundController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Found item reported',
-            'data' => $foundItem
+            'data' => $foundItem->load(['item', 'category', 'images']),
         ], 201);
     }
 
@@ -63,9 +75,22 @@ class ItemFoundController extends Controller
         $foundItem = ItemFound::where('user_id', $request->user()->id)
             ->findOrFail($id);
 
+        if (!$request->item_id && !$request->custom_item_name) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Item is required'
+            ], 422);
+        }
+
+        $itemId = $request->item_id
+            ? $request->item_id
+            : ($request->custom_item_name
+                ? $this->resolveItemId($request)
+                : $foundItem->item_id);
+
         $validated = $request->validate([
             'category_id' => 'sometimes|exists:categories,id',
-            'item_id' => 'sometimes|exists:items,id',
+            'item_id' => $itemId,
             'found_date' => 'nullable|date',
             'found_location' => 'nullable|string',
             'description' => 'nullable|string',
@@ -76,7 +101,8 @@ class ItemFoundController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Found item updated',
-            'data' => $foundItem
+            'data' => $foundItem->load(['item', 'category', 'images']),
+
         ]);
     }
 
@@ -91,5 +117,19 @@ class ItemFoundController extends Controller
             'success' => true,
             'message' => 'Found item deleted'
         ]);
+    }
+
+    private function resolveItemId(Request $request): int
+    {
+        if ($request->item_id) {
+            return $request->item_id;
+        }
+
+        return Item::firstOrCreate(
+            [
+                'name' => trim($request->custom_item_name),
+                'category_id' => $request->category_id,
+            ]
+        )->id;
     }
 }

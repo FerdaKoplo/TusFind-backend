@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\ItemController;
 use App\Http\Controllers\Api\ItemFoundController;
 use App\Http\Controllers\Api\ItemLostController;
 use App\Http\Controllers\Api\MatchReportController;
@@ -22,9 +23,31 @@ use Illuminate\Support\Facades\Route;
 //     return $request->user();
 // });
 
-Route::middleware('auth:sanctum')->group(function () {
+// Route::middleware('auth:sanctum')->group(function () {
 
 
+//     // Match Report Routes
+//     Route::get('/matches', [MatchReportController::class, 'index']);
+//     Route::get('/matches/{id}', [MatchReportController::class, 'show']);
+
+//     Route::post('/matches/auto-match', [MatchReportController::class, 'autoMatch']);
+
+//     Route::post('/matches/{id}/confirm', [MatchReportController::class, 'confirm']);
+//     Route::post('/matches/{id}/reject', [MatchReportController::class, 'reject']);
+
+
+//     // Lost Items
+//     Route::apiResource('lost-items', ItemLostController::class);
+
+//     // Found Items
+//     Route::apiResource('found-items', ItemFoundController::class);
+
+//     Route::get('/categories', [CategoryController::class, 'index']);
+//     Route::get('/categories/{category}', [CategoryController::class, 'show']);
+// });
+
+
+Route::middleware(['dev.auth'])->group(function () {
     // Match Report Routes
     Route::get('/matches', [MatchReportController::class, 'index']);
     Route::get('/matches/{id}', [MatchReportController::class, 'show']);
@@ -34,10 +57,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/matches/{id}/confirm', [MatchReportController::class, 'confirm']);
     Route::post('/matches/{id}/reject', [MatchReportController::class, 'reject']);
 
+    Route::apiResource('items', ItemController::class);
 
     // Lost Items
     Route::apiResource('lost-items', ItemLostController::class);
-
     // Found Items
     Route::apiResource('found-items', ItemFoundController::class);
 

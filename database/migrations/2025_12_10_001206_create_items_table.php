@@ -12,8 +12,8 @@ return new class extends Migration {
     {
         Schema::create('items', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('category_id')->nullable()->constrained()->nullOnDelete();
             $table->string('name');
-            $table->string('category')->nullable();
             $table->string('brand')->nullable();
             $table->string('color')->nullable();
             $table->timestamps();
