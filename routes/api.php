@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\ItemController;
 use App\Http\Controllers\Api\ItemFoundController;
 use App\Http\Controllers\Api\ItemLostController;
 use App\Http\Controllers\Api\MatchReportController;
+use App\Http\Controllers\Api\ProfileController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -66,4 +67,12 @@ Route::middleware(['dev.auth'])->group(function () {
 
     Route::get('/categories', [CategoryController::class, 'index']);
     Route::get('/categories/{category}', [CategoryController::class, 'show']);
+
+    // profile
+    Route::get('/profile/lost-items', [ProfileController::class, 'myLostItems']);
+    Route::get('/profile/found-items', [ProfileController::class, 'myFoundItems']);
+    // Route::get('/profile', [ProfileController::class, 'show']);
+    // Route::put('/profile/{id}', [ProfileController::class, 'update']); 
+    Route::get('/profile/stats', [ProfileController::class, 'stats']);
+    // Route::post('/profile/password', [ProfileController::class, 'changePassword']);
 });

@@ -42,4 +42,14 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    public function itemsLost()
+    {
+        return $this->hasMany(ItemLost::class, 'user_id');
+    }
+
+    public function itemsFound()
+    {
+        return $this->hasMany(ItemFound::class, 'user_id');
+    }
 }
