@@ -12,12 +12,11 @@ class CategoryController extends Controller
     public function index()
     {
         $categories = Category::latest()->get();
-        return view('admin.categories.index', compact('categories'));
-    }
 
-    public function create()
-    {
-        return view('admin.categories.create');
+        return response()->json([
+            'status' => 'success',
+            'data' => $categories
+        ]);
     }
 
     public function store(Request $request)
@@ -27,22 +26,31 @@ class CategoryController extends Controller
             'description' => 'nullable'
         ]);
 
-         $category =  Category::create($request->only('name', 'description'));
+        $category = Category::create($request->only('name', 'description'));
 
-         AdminLogger::log("Created category: {$category->name}");
+        AdminLogger::log("Created category: {$category->name}");
 
-        return redirect()
-            ->route('admin.categories.index')
-            ->with('success', 'Category created successfully');
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Category created successfully',
+            'data' => $category
+        ], 201);
     }
 
-    public function edit(Category $category)
+    public function show($id)
     {
-        return view('admin.categories.edit', compact('category'));
+        $category = Category::findOrFail($id);
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $category
+        ]);
     }
 
-    public function update(Request $request, Category $category)
+    public function update(Request $request, $id)
     {
+        $category = Category::findOrFail($id);
+
         $request->validate([
             'name' => 'required|unique:categories,name,' . $category->id,
             'description' => 'nullable'
@@ -52,19 +60,24 @@ class CategoryController extends Controller
 
         AdminLogger::log("Updated category: {$category->name}");
 
-        return redirect()
-            ->route('admin.categories.index')
-            ->with('success', 'Category updated successfully');
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Category updated successfully',
+            'data' => $category
+        ]);
     }
 
-    public function destroy(Category $category)
+    public function destroy($id)
     {
+        $category = Category::findOrFail($id);
+
         AdminLogger::log("Deleted category: {$category->name}");
-        
+
         $category->delete();
 
-        return redirect()
-            ->route('admin.categories.index')
-            ->with('success', 'Category deleted successfully');
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Category deleted successfully'
+        ]);
     }
 }

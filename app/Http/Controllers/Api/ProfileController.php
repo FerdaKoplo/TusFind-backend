@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\MatchReport;
 use Hash;
 use Illuminate\Http\Request;
 
 class ProfileController extends Controller
 {
+    // ivan
     public function stats(Request $request)
     {
         $user = $request->user();
@@ -17,19 +19,21 @@ class ProfileController extends Controller
             'data' => [
                 'lost_count' => $user->itemsLost()->count(),
                 'found_count' => $user->itemsFound()->count(),
-                'resolved_count' => $user->itemsLost()->where('status', 'resolved')->count() 
-                                  + $user->itemsFound()->where('status', 'claimed')->count(),
+                'resolved_count' => $user->itemsLost()->where('status', 'resolved')->count()
+                    + $user->itemsFound()->where('status', 'claimed')->count(),
             ]
         ]);
     }
 
-    // public function show(Request $request)
-    // {
-    //     return response()->json([
-    //         'status' => 'success',
-    //         'data' => $request->user()
-    //     ]);
-    // }
+    // ivan
+    public function show(Request $request)
+    {
+        return response()->json([
+            'status' => 'success',
+            'data' => $request->user()
+        ]);
+    }
+
 
     // public function update(Request $request)
     // {
@@ -49,7 +53,8 @@ class ProfileController extends Controller
     //     ]);
     // }
 
-   public function myLostItems(Request $request)
+    // ivan
+    public function myLostItems(Request $request)
     {
         $query = $request->user()->itemsLost()->with(['item', 'category']);
 
@@ -64,9 +69,9 @@ class ProfileController extends Controller
         $query->when($request->search, function ($q, $search) {
             return $q->where(function ($subQ) use ($search) {
                 $subQ->where('description', 'like', "%{$search}%")
-                     ->orWhereHas('item', function ($itemQ) use ($search) {
-                         $itemQ->where('name', 'like', "%{$search}%");
-                     });
+                    ->orWhereHas('item', function ($itemQ) use ($search) {
+                        $itemQ->where('name', 'like', "%{$search}%");
+                    });
             });
         });
 
@@ -104,6 +109,7 @@ class ProfileController extends Controller
     //     ]);
     // }
 
+    // ivan
     public function myFoundItems(Request $request)
     {
         $query = $request->user()->itemsFound()->with(['item', 'category']);
@@ -119,9 +125,9 @@ class ProfileController extends Controller
         $query->when($request->search, function ($q, $search) {
             return $q->where(function ($subQ) use ($search) {
                 $subQ->where('description', 'like', "%{$search}%")
-                     ->orWhereHas('item', function ($itemQ) use ($search) {
-                         $itemQ->where('name', 'like', "%{$search}%");
-                     });
+                    ->orWhereHas('item', function ($itemQ) use ($search) {
+                        $itemQ->where('name', 'like', "%{$search}%");
+                    });
             });
         });
 
@@ -130,6 +136,28 @@ class ProfileController extends Controller
         return response()->json([
             'status' => 'success',
             'data' => $items
+        ]);
+    }
+
+    // ivan
+    public function myMatches(Request $request)
+    {
+        $userId = $request->user()->id;
+
+        $matches = MatchReport::with(['itemLost.item', 'itemFound.item'])
+            ->whereHas('itemLost', function ($query) use ($userId) {
+                $query->where('user_id', $userId);
+            })
+            ->has('itemFound')
+            ->when($request->status, function ($q, $status) {
+                return $q->where('status', $status);
+            })
+            ->latest()
+            ->get();
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $matches
         ]);
     }
 }

@@ -23,34 +23,39 @@ class ItemLostController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $request->validate([
             'category_id' => 'required|exists:categories,id',
             'item_id' => 'nullable|exists:items,id',
             'custom_item_name' => 'nullable|string|max:255',
             'lost_date' => 'nullable|date',
-            'lost_location' => 'nullable|string',
+            'lost_location' => 'required|string',
             'description' => 'nullable|string',
         ]);
 
-        if (!$request->item_id && !$request->custom_item_name) {
+        if (!$request->filled('item_id') && !$request->filled('custom_item_name')) {
             return response()->json([
                 'success' => false,
                 'message' => 'Item is required'
             ], 422);
         }
 
-        $itemId = $this->resolveItemId($request);
-
-
-        $lostItem = ItemLost::create([
+        $data = [
             'user_id' => $request->user()->id,
-            'category_id' => $validated['category_id'],
-            'item_id' => $itemId,
-            'lost_date' => $validated['lost_date'] ?? null,
-            'lost_location' => $validated['lost_location'] ?? null,
-            'description' => $validated['description'] ?? null,
+            'category_id' => $request->category_id,
+            'lost_date' => $request->lost_date,
+            'lost_location' => $request->lost_location,
+            'description' => $request->description,
             'status' => ItemLost::STATUS_PENDING,
-        ]);
+        ];
+        if ($request->filled('item_id')) {
+            $data['item_id'] = $request->item_id;
+            $data['custom_item_name'] = null;
+        } else {
+            $data['item_id'] = null;
+            $data['custom_item_name'] = $request->custom_item_name;
+        }
+
+        $lostItem = ItemLost::create($data);
 
         return response()->json([
             'success' => true,
@@ -75,26 +80,31 @@ class ItemLostController extends Controller
         $lostItem = ItemLost::where('user_id', $request->user()->id)
             ->findOrFail($id);
 
-        if (!$request->item_id && !$request->custom_item_name) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Item is required'
-            ], 422);
+        $request->validate([
+            'category_id' => 'required|exists:categories,id',
+            'item_id' => 'nullable|exists:items,id',
+            'custom_item_name' => 'nullable|string',
+            'lost_location' => 'required|string',
+            'description' => 'nullable|string',
+            'lost_date' => 'nullable|date',
+        ]);
+
+        $data = [
+            'category_id' => $request->category_id,
+            'lost_location' => $request->lost_location,
+            'description' => $request->description,
+            'lost_date' => $request->lost_date,
+        ];
+
+        if ($request->filled('item_id')) {
+            $data['item_id'] = $request->item_id;
+            $data['custom_item_name'] = null;
+        } elseif ($request->filled('custom_item_name')) {
+            $data['custom_item_name'] = $request->custom_item_name;
+            $data['item_id'] = null;
         }
 
-        $itemId = $request->item_id
-            ? $request->item_id
-            : ($request->custom_item_name
-                ? $this->resolveItemId($request)
-                : $lostItem->item_id);
-
-        $lostItem->update([
-            'category_id' => $validated['category_id'] ?? $lostItem->category_id,
-            'item_id' => $itemId,
-            'lost_date' => $validated['lost_date'] ?? $lostItem->lost_date,
-            'lost_location' => $validated['lost_location'] ?? $lostItem->lost_location,
-            'description' => $validated['description'] ?? $lostItem->description,
-        ]);
+        $lostItem->update($data);
 
         return response()->json([
             'success' => true,
@@ -116,17 +126,17 @@ class ItemLostController extends Controller
         ]);
     }
 
-    private function resolveItemId(Request $request): int
-    {
-        if ($request->item_id) {
-            return $request->item_id;
-        }
+    // private function resolveItemId(Request $request): int
+    // {
+    //     if ($request->item_id) {
+    //         return $request->item_id;
+    //     }
 
-        return Item::firstOrCreate(
-            [
-                'name' => trim($request->custom_item_name),
-                'category_id' => $request->category_id,
-            ]
-        )->id;
-    }
+    //     return Item::firstOrCreate(
+    //         [
+    //             'name' => trim($request->custom_item_name),
+    //             'category_id' => $request->category_id,
+    //         ]
+    //     )->id;
+    // }
 }

@@ -71,7 +71,8 @@ Route::middleware(['dev.auth'])->group(function () {
     // profile
     Route::get('/profile/lost-items', [ProfileController::class, 'myLostItems']);
     Route::get('/profile/found-items', [ProfileController::class, 'myFoundItems']);
-    // Route::get('/profile', [ProfileController::class, 'show']);
+    Route::get('/profile/matches', [ProfileController::class, 'myMatches']);
+    Route::get('/profile', [ProfileController::class, 'show']);
     // Route::put('/profile/{id}', [ProfileController::class, 'update']); 
     Route::get('/profile/stats', [ProfileController::class, 'stats']);
     // Route::post('/profile/password', [ProfileController::class, 'changePassword']);

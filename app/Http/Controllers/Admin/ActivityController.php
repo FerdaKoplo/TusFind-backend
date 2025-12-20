@@ -24,8 +24,10 @@ class ActivityController extends Controller
 
         $logs = $query->paginate(20);
 
-        return view('admin.activities.index', compact('logs'));
+        return response()->json([
+            'status' => 'success',
+            'data' => $logs
+        ]);
     }
-
 
 }
