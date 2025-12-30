@@ -1,11 +1,13 @@
 <?php
 
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ItemController;
 use App\Http\Controllers\Api\ItemFoundController;
 use App\Http\Controllers\Api\ItemLostController;
 use App\Http\Controllers\Api\MatchReportController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Auth\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -47,8 +49,16 @@ use Illuminate\Support\Facades\Route;
 //     Route::get('/categories/{category}', [CategoryController::class, 'show']);
 // });
 
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
 
-Route::middleware(['dev.auth'])->group(function () {
+Route::middleware(['auth:api'])->group(function () {
+
+    // admin
+    Route::get('/admin/dashboard', [DashboardController::class, 'index']);
+
+    // auth
+    Route::post('/logout', [AuthController::class, 'logout']);
     // Match Report Routes
     Route::get('/matches', [MatchReportController::class, 'index']);
     Route::get('/matches/{id}', [MatchReportController::class, 'show']);
