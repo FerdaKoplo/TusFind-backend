@@ -15,7 +15,11 @@ class MatchReportController extends Controller
         $matches = MatchReport::with([
             'itemLost.item',
             'itemFound.item'
-        ])->latest()->get();
+        ])
+            ->has('itemLost')
+            ->has('itemFound')
+            ->latest()
+            ->get();
 
         return response()->json([
             'success' => true,

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Item;
 use App\Models\ItemFound;
 use Illuminate\Http\Request;
 
@@ -22,28 +23,45 @@ class ItemFoundController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $request->validate([
             'category_id' => 'required|exists:categories,id',
-            'item_id' => 'required|exists:items,id',
+            'item_id' => 'nullable|exists:items,id',
+            'custom_item_name' => 'nullable|string|max:255',
             'found_date' => 'nullable|date',
-            'found_location' => 'nullable|string',
+            'found_location' => 'required|string',
             'description' => 'nullable|string',
         ]);
 
-        $foundItem = ItemFound::create([
+        if (!$request->filled('item_id') && !$request->filled('custom_item_name')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Item is required (select from list or type custom name)'
+            ], 422);
+        }
+
+        $data = [
             'user_id' => $request->user()->id,
-            'category_id' => $validated['category_id'],
-            'item_id' => $validated['item_id'],
-            'found_date' => $validated['found_date'] ?? null,
-            'found_location' => $validated['found_location'] ?? null,
-            'description' => $validated['description'] ?? null,
+            'category_id' => $request->category_id,
+            'found_date' => $request->found_date,
+            'found_location' => $request->found_location,
+            'description' => $request->description,
             'status' => ItemFound::STATUS_PENDING,
-        ]);
+        ];
+
+        if ($request->filled('item_id')) {
+            $data['item_id'] = $request->item_id;
+            $data['custom_item_name'] = null;
+        } else {
+            $data['item_id'] = null;
+            $data['custom_item_name'] = $request->custom_item_name;
+        }
+
+        $foundItem = ItemFound::create($data);
 
         return response()->json([
             'success' => true,
             'message' => 'Found item reported',
-            'data' => $foundItem
+            'data' => $foundItem->load(['item', 'category', 'images']),
         ], 201);
     }
 
@@ -63,20 +81,36 @@ class ItemFoundController extends Controller
         $foundItem = ItemFound::where('user_id', $request->user()->id)
             ->findOrFail($id);
 
-        $validated = $request->validate([
-            'category_id' => 'sometimes|exists:categories,id',
-            'item_id' => 'sometimes|exists:items,id',
+        $request->validate([
+            'category_id' => 'required|exists:categories,id',
+            'item_id' => 'nullable|exists:items,id',
+            'custom_item_name' => 'nullable|string|max:255',
             'found_date' => 'nullable|date',
-            'found_location' => 'nullable|string',
+            'found_location' => 'required|string',
             'description' => 'nullable|string',
         ]);
 
-        $foundItem->update($validated);
+        $data = [
+            'category_id' => $request->category_id,
+            'found_date' => $request->found_date,
+            'found_location' => $request->found_location,
+            'description' => $request->description,
+        ];
+
+        if ($request->filled('item_id')) {
+            $data['item_id'] = $request->item_id;
+            $data['custom_item_name'] = null;
+        } elseif ($request->filled('custom_item_name')) {
+            $data['custom_item_name'] = $request->custom_item_name;
+            $data['item_id'] = null;
+        }
+
+        $foundItem->update($data);
 
         return response()->json([
             'success' => true,
             'message' => 'Found item updated',
-            'data' => $foundItem
+            'data' => $foundItem->load(['item', 'category', 'images']),
         ]);
     }
 
@@ -92,4 +126,18 @@ class ItemFoundController extends Controller
             'message' => 'Found item deleted'
         ]);
     }
+
+    // private function resolveItemId(Request $request): int
+    // {
+    //     if ($request->item_id) {
+    //         return $request->item_id;
+    //     }
+
+    //     return Item::firstOrCreate(
+    //         [
+    //             'name' => trim($request->custom_item_name),
+    //             'category_id' => $request->category_id,
+    //         ]
+    //     )->id;
+    // }
 }

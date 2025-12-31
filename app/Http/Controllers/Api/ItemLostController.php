@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Item;
 use App\Models\ItemLost;
 use Illuminate\Http\Request;
 
@@ -22,28 +23,44 @@ class ItemLostController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $request->validate([
             'category_id' => 'required|exists:categories,id',
-            'item_id' => 'required|exists:items,id',
+            'item_id' => 'nullable|exists:items,id',
+            'custom_item_name' => 'nullable|string|max:255',
             'lost_date' => 'nullable|date',
-            'lost_location' => 'nullable|string',
+            'lost_location' => 'required|string',
             'description' => 'nullable|string',
         ]);
 
-        $lostItem = ItemLost::create([
+        if (!$request->filled('item_id') && !$request->filled('custom_item_name')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Item is required'
+            ], 422);
+        }
+
+        $data = [
             'user_id' => $request->user()->id,
-            'category_id' => $validated['category_id'],
-            'item_id' => $validated['item_id'],
-            'lost_date' => $validated['lost_date'] ?? null,
-            'lost_location' => $validated['lost_location'] ?? null,
-            'description' => $validated['description'] ?? null,
+            'category_id' => $request->category_id,
+            'lost_date' => $request->lost_date,
+            'lost_location' => $request->lost_location,
+            'description' => $request->description,
             'status' => ItemLost::STATUS_PENDING,
-        ]);
+        ];
+        if ($request->filled('item_id')) {
+            $data['item_id'] = $request->item_id;
+            $data['custom_item_name'] = null;
+        } else {
+            $data['item_id'] = null;
+            $data['custom_item_name'] = $request->custom_item_name;
+        }
+
+        $lostItem = ItemLost::create($data);
 
         return response()->json([
             'success' => true,
             'message' => 'Lost item reported',
-            'data' => $lostItem
+            'data' => $lostItem->load(['item', 'category', 'images']),
         ], 201);
     }
 
@@ -63,20 +80,36 @@ class ItemLostController extends Controller
         $lostItem = ItemLost::where('user_id', $request->user()->id)
             ->findOrFail($id);
 
-        $validated = $request->validate([
-            'category_id' => 'sometimes|exists:categories,id',
-            'item_id' => 'sometimes|exists:items,id',
-            'lost_date' => 'nullable|date',
-            'lost_location' => 'nullable|string',
+        $request->validate([
+            'category_id' => 'required|exists:categories,id',
+            'item_id' => 'nullable|exists:items,id',
+            'custom_item_name' => 'nullable|string',
+            'lost_location' => 'required|string',
             'description' => 'nullable|string',
+            'lost_date' => 'nullable|date',
         ]);
 
-        $lostItem->update($validated);
+        $data = [
+            'category_id' => $request->category_id,
+            'lost_location' => $request->lost_location,
+            'description' => $request->description,
+            'lost_date' => $request->lost_date,
+        ];
+
+        if ($request->filled('item_id')) {
+            $data['item_id'] = $request->item_id;
+            $data['custom_item_name'] = null;
+        } elseif ($request->filled('custom_item_name')) {
+            $data['custom_item_name'] = $request->custom_item_name;
+            $data['item_id'] = null;
+        }
+
+        $lostItem->update($data);
 
         return response()->json([
             'success' => true,
             'message' => 'Lost item updated',
-            'data' => $lostItem
+            'data' => $lostItem->load(['item', 'category', 'images']),
         ]);
     }
 
@@ -92,4 +125,18 @@ class ItemLostController extends Controller
             'message' => 'Lost item deleted'
         ]);
     }
+
+    // private function resolveItemId(Request $request): int
+    // {
+    //     if ($request->item_id) {
+    //         return $request->item_id;
+    //     }
+
+    //     return Item::firstOrCreate(
+    //         [
+    //             'name' => trim($request->custom_item_name),
+    //             'category_id' => $request->category_id,
+    //         ]
+    //     )->id;
+    // }
 }

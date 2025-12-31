@@ -15,6 +15,7 @@ return new class extends Migration {
             $table->foreignId('item_id')->constrained()->cascadeOnDelete();
             $table->foreignId('item_lost_id')->nullable()->constrained('item_losts')->nullOnDelete();
             $table->foreignId('item_found_id')->nullable()->constrained('item_founds')->nullOnDelete();
+            $table->string('image_path');
             $table->timestamps();
         });
     }
