@@ -55,10 +55,14 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware(['auth:api'])->group(function () {
 
     // admin
-    Route::get('/admin/dashboard', [DashboardController::class, 'index']);
+    Route::get('/admin/stats', [DashboardController::class, 'index']);
+    Route::apiResource('categories', \App\Http\Controllers\Admin\CategoryController::class);
+
 
     // auth
     Route::post('/logout', [AuthController::class, 'logout']);
+
+
     // Match Report Routes
     Route::get('/matches', [MatchReportController::class, 'index']);
     Route::get('/matches/{id}', [MatchReportController::class, 'show']);

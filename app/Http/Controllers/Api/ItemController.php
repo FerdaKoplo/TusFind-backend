@@ -21,4 +21,27 @@ class ItemController extends Controller
             'data' => $item->load('category')
         ]);
     }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string',
+            'category_id' => 'nullable|exists:categories,id',
+            'brand' => 'nullable|string',
+            'color' => 'nullable|string',
+        ]);
+
+        $item = Item::create([
+            'name' => $request->name,
+            'category_id' => $request->category_id,
+            'brand' => $request->brand,
+            'color' => $request->color,
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Item created successfully',
+            'data' => $item->load('category')
+        ], 201);
+    }
 }

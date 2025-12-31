@@ -23,7 +23,7 @@ class CategoryController extends Controller
     {
         $request->validate([
             'name' => 'required|unique:categories,name',
-            'description' => 'nullable'
+            'description' => 'nullable|string'
         ]);
 
         $category = Category::create($request->only('name', 'description'));
@@ -37,23 +37,13 @@ class CategoryController extends Controller
         ], 201);
     }
 
-    public function show($id)
-    {
-        $category = Category::findOrFail($id);
-
-        return response()->json([
-            'status' => 'success',
-            'data' => $category
-        ]);
-    }
-
     public function update(Request $request, $id)
     {
         $category = Category::findOrFail($id);
 
         $request->validate([
             'name' => 'required|unique:categories,name,' . $category->id,
-            'description' => 'nullable'
+            'description' => 'nullable|string'
         ]);
 
         $category->update($request->only('name', 'description'));
